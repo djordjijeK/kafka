@@ -1,0 +1,174 @@
+version: '3'
+
+networks:
+  kafka-cluster:
+    name: kafka-cluster
+    driver: bridge
+
+services:
+  zookeeper-1:
+    image: confluentinc/cp-zookeeper
+    container_name: zookeeper-1
+    networks:
+    - kafka-cluster
+    profiles:
+    - cluster
+    restart: always
+    environment:
+      ZOOKEEPER_SERVER_ID: 1
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 3000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_MAX_CLIENT_CNXNS: 25
+      ZOOKEEPER_AUTOPURGE_SNAP_RETAIN_COUNT: 3
+      ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: 1
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+    ports:
+    - '8081:2181'
+
+  zookeeper-2:
+    image: confluentinc/cp-zookeeper
+    container_name: zookeeper-2
+    networks:
+    - kafka-cluster
+    profiles:
+    - cluster
+    restart: always
+    environment:
+      ZOOKEEPER_SERVER_ID: 2
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 3000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_MAX_CLIENT_CNXNS: 25
+      ZOOKEEPER_AUTOPURGE_SNAP_RETAIN_COUNT: 3
+      ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: 1
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+    ports:
+    - '8082:2181'
+
+  zookeeper-3:
+    image: confluentinc/cp-zookeeper
+    container_name: zookeeper-3
+    networks:
+    - kafka-cluster
+    profiles:
+    - cluster
+    restart: always
+    environment:
+      ZOOKEEPER_SERVER_ID: 3
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 3000
+      ZOOKEEPER_INIT_LIMIT: 5
+      ZOOKEEPER_SYNC_LIMIT: 2
+      ZOOKEEPER_MAX_CLIENT_CNXNS: 25
+      ZOOKEEPER_AUTOPURGE_SNAP_RETAIN_COUNT: 3
+      ZOOKEEPER_AUTOPURGE_PURGE_INTERVAL: 1
+      ZOOKEEPER_SERVERS: zookeeper-1:2888:3888;zookeeper-2:2888:3888;zookeeper-3:2888:3888
+    ports:
+    - '8083:2181'
+
+  kafka-1:
+    image: confluentinc/cp-kafka
+    container_name: kafka-1
+    depends_on:
+    - zookeeper-1
+    - zookeeper-2
+    - zookeeper-3
+    networks:
+    - kafka-cluster
+    profiles:
+    - cluster
+    restart: always
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT_INTERNAL://kafka-1:29092,PLAINTEXT_EXTERNAL://kafka-1:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://kafka-1:29092,PLAINTEXT_EXTERNAL://localhost:8881
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+    ports:
+    - '8881:9092'
+
+  kafka-2:
+    image: confluentinc/cp-kafka
+    container_name: kafka-2
+    depends_on:
+    - zookeeper-1
+    - zookeeper-2
+    - zookeeper-3
+    networks:
+    - kafka-cluster
+    profiles:
+    - cluster
+    restart: always
+    environment:
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT_INTERNAL://kafka-2:29092,PLAINTEXT_EXTERNAL://kafka-2:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://kafka-2:29092,PLAINTEXT_EXTERNAL://localhost:8882
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+    ports:
+    - '8882:9092'
+
+  kafka-3:
+    image: confluentinc/cp-kafka
+    container_name: kafka-3
+    depends_on:
+    - zookeeper-1
+    - zookeeper-2
+    - zookeeper-3
+    networks:
+    - kafka-cluster
+    profiles:
+    - cluster
+    restart: always
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT_INTERNAL://kafka-3:29092,PLAINTEXT_EXTERNAL://kafka-3:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://kafka-3:29092,PLAINTEXT_EXTERNAL://localhost:8883
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+    ports:
+    - '8883:9092'
+
+  kafka-4:
+    image: confluentinc/cp-kafka
+    container_name: kafka-4
+    networks:
+    - kafka-cluster
+    restart: always
+    profiles:
+    - scale
+    environment:
+      KAFKA_BROKER_ID: 4
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT_INTERNAL://kafka-4:29092,PLAINTEXT_EXTERNAL://kafka-4:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://kafka-4:29092,PLAINTEXT_EXTERNAL://localhost:8884
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+    - '8884:9092'
+
+  kafka-5:
+    image: confluentinc/cp-kafka
+    container_name: kafka-5
+    networks:
+    - kafka-cluster
+    restart: always
+    profiles:
+    - scale
+    environment:
+      KAFKA_BROKER_ID: 5
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181,zookeeper-2:2181,zookeeper-3:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT_INTERNAL:PLAINTEXT,PLAINTEXT_EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: PLAINTEXT_INTERNAL://kafka-5:29092,PLAINTEXT_EXTERNAL://kafka-5:9092
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT_INTERNAL://kafka-5:29092,PLAINTEXT_EXTERNAL://localhost:8885
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT_INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+    - '8885:9092'
